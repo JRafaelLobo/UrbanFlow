@@ -21,6 +21,7 @@ export default function Interactuar() {
     const account = useActiveAccount();
     const theme = useColorScheme();
     account?.address
+    
 
 
     const contractEvents = useContractEvents({

@@ -40,9 +40,8 @@ const BOTTOM_SHEET_MAX_HEIGHT = height * 0.8;
 const BOTTOM_SHEET_MIN_HEIGHT = height * 0.35;
 
 // Smart Contract Configuration
-const CONTRACT_ADDRESS = "0x...";
+const CONTRACT_ADDRESS = "0xe5ce000007c925cb44cb06ad818d3cc77b9d4d05";
 const CONTRACT_ABI = [
-
 
   {
     "inputs": [
@@ -945,8 +944,6 @@ const CONTRACT_ABI = [
 
 
 
-
-
 const DeliveryApp = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const bottomSheetHeight = useRef(new Animated.Value(BOTTOM_SHEET_MIN_HEIGHT)).current;
@@ -960,14 +957,13 @@ const DeliveryApp = () => {
     secretKey,
   });
 
-  /*
   const contrato = getContract({
     address: CONTRACT_ADDRESS,
     chain: arbitrumSepolia,
     client: THIRDWEB_CLIENT,
-    abi:CONTRACT_ABI
+    abi: CONTRACT_ABI
   });
-*/
+
 
   // Blockchain State
   const account = useActiveAccount();
