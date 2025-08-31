@@ -7,7 +7,7 @@ import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 import { toTokens } from "thirdweb";
 import { transferEvent } from "thirdweb/extensions/erc20";
 import { totalSupply } from "thirdweb/extensions/erc721";
-import { useContractEvents, useReadContract } from "thirdweb/react";
+import { useActiveAccount, useContractEvents, useReadContract } from "thirdweb/react";
 import { shortenAddress } from "thirdweb/utils";
 
 export default function ReadScreen() {
@@ -57,6 +57,7 @@ function ReadSection() {
 		contract,
 	});
 
+	const account = useActiveAccount();
 	return (
 		<ThemedView style={styles.stepContainer}>
 			<View style={{ gap: 2 }}>

@@ -1,67 +1,48 @@
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Tabs } from "expo-router";
+import { Stack, Tabs } from "expo-router";
 import React from "react";
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
 
 	return (
-		<Tabs
+		<Stack
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-				headerShown: false,
+				headerShown: false, // Oculta la barra superior, cámbialo a true si quieres mostrar títulos
 			}}
 		>
-			<Tabs.Screen
+			<Stack.Screen
 				name="index"
 				options={{
-					title: "Connect",
-					tabBarIcon: ({ color, focused }) => (
-						<TabBarIcon
-							name={focused ? "wallet" : "wallet-outline"}
-							color={color}
-						/>
-					),
+					title: "iniciar",
 				}}
 			/>
-			<Tabs.Screen
+			<Stack.Screen
 				name="read"
 				options={{
 					title: "Read",
-					tabBarIcon: ({ color, focused }) => (
-						<TabBarIcon
-							name={focused ? "reader" : "reader-outline"}
-							color={color}
-						/>
-					),
 				}}
 			/>
-			<Tabs.Screen
+			<Stack.Screen
 				name="write"
 				options={{
 					title: "Write",
-					tabBarIcon: ({ color, focused }) => (
-						<TabBarIcon
-							name={focused ? "code-slash" : "code-slash-outline"}
-							color={color}
-						/>
-					),
 				}}
 			/>
-			<Tabs.Screen
+			<Stack.Screen
 				name="buy"
 				options={{
 					title: "Buy",
-					tabBarIcon: ({ color, focused }) => (
-						<TabBarIcon
-							name={focused ? "cart" : "cart-outline"}
-							color={color}
-						/>
-					),
 				}}
 			/>
-		</Tabs>
+			<Stack.Screen
+				name="interactuar"
+				options={{
+					title: "Interact",
+				}}
+			/>
+		</Stack>
 	);
 }
