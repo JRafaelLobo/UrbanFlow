@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "thirdweb playground",
-    "slug": "thirdweb-playground",
+    "name": "UrbanFlow",
+    "slug": "UrbanFlow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.jpeg",
     "scheme": "com.thirdweb.demo",
     "userInterfaceStyle": "automatic",
     "splash": {

@@ -43,6 +43,12 @@ export default function TabLayout() {
 					title: "Interact",
 				}}
 			/>
+			<Stack.Screen
+				name="map"
+				options={{
+					title: "map",
+				}}
+			/>
 		</Stack>
 	);
 }

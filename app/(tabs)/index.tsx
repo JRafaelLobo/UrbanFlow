@@ -79,9 +79,7 @@ export default function HomeScreen() {
 
 	useEffect(() => {
 		if (account) {
-			router.replace("/read");
-			router.replace("/write");
-			router.replace("/interactuar")
+			router.replace("/map")
 		}
 	}, [account]);
 
@@ -134,7 +132,7 @@ export default function HomeScreen() {
 					label: "Log In",
 				}}
 				connectModal={{
-					title: "✨ MyApp Login",
+					title: "UrbanFlow",
 				}}
 			/>
 			{ }
