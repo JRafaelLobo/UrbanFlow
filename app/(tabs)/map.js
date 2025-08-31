@@ -20,6 +20,18 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Location from 'expo-location';
 import { WebView } from 'react-native-webview';
+
+import { contract } from "@/constants/thirdweb";
+import { TransactionButton, useActiveAccount, useContractEvents, } from "thirdweb/react";
+
+import { arbitrumSepolia } from "thirdweb/chains";
+import {
+  getContract,
+  prepareContractCall,
+  toUnits,
+} from "thirdweb";
+import { createThirdwebClient, ThirdwebClient } from "thirdweb";
+
 // Assuming you're using ethers.js or web3.js for blockchain interaction
 // import { ethers } from 'ethers';
 
@@ -28,897 +40,896 @@ const BOTTOM_SHEET_MAX_HEIGHT = height * 0.8;
 const BOTTOM_SHEET_MIN_HEIGHT = height * 0.35;
 
 // Smart Contract Configuration
-const CONTRACT_ADDRESS = "0x..."; // Your deployed contract address
+const CONTRACT_ADDRESS = "0xe5ce000007c925cb44cb06ad818d3cc77b9d4d05";
 const CONTRACT_ABI = [
-  // Add your contract ABI here
-  
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_platform",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_feeManager",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "AcceptWindowPassed",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "DeadlineNotReached",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "DeadlinePassed",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ECDSAInvalidSignature",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "length",
-				"type": "uint256"
-			}
-		],
-		"name": "ECDSAInvalidSignatureLength",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "s",
-				"type": "bytes32"
-			}
-		],
-		"name": "ECDSAInvalidSignatureS",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ExcessivePlatformFee",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ExcessiveSlippage",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "InvalidAmounts",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "InvalidCodeLength",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "InvalidSignature",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "InvalidState",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "NotAuthorized",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "TimeOverflow",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "TransferFailed",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "WrongCode",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "WrongValue",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ZeroAddress",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "AccidentalDepositReceived",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "oldManager",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newManager",
-				"type": "address"
-			}
-		],
-		"name": "FeeManagerUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			}
-		],
-		"name": "OrderAccepted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "canceler",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "refundAmount",
-				"type": "uint256"
-			}
-		],
-		"name": "OrderCanceled",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "customer",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "merchant",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountDriver",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountMerchant",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "platformFee",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "OrderCreated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			}
-		],
-		"name": "OrderDelivered",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "customer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "OrderRefunded",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "attemptsLeft",
-				"type": "uint8"
-			}
-		],
-		"name": "PINAttemptFailed",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "oldPercentage",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "newPercentage",
-				"type": "uint256"
-			}
-		],
-		"name": "PlatformFeeUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "WithdrawalMade",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "DOMAIN_SEPARATOR",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "DOMAIN_TYPEHASH",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "DRIVER_ACCEPT_WINDOW",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "ORDER_APPROVAL_TYPEHASH",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "acceptOrder",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "canDriverAccept",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "cancelOrder",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "code",
-				"type": "string"
-			}
-		],
-		"name": "computeCodeHash",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "code",
-				"type": "string"
-			}
-		],
-		"name": "confirmDelivery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_driver",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_merchant",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amountDriver",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amountMerchant",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_platformFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "_codeHash",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes",
-				"name": "_driverSignature",
-				"type": "bytes"
-			},
-			{
-				"internalType": "bytes",
-				"name": "_merchantSignature",
-				"type": "bytes"
-			}
-		],
-		"name": "createOrder",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "feeManager",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "getAcceptTimeRemaining",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			}
-		],
-		"name": "getDriverOrders",
-		"outputs": [
-			{
-				"internalType": "uint256[]",
-				"name": "driverOrders",
-				"type": "uint256[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "getOrderStatus",
-		"outputs": [
-			{
-				"internalType": "enum DeliveryEscrow.State",
-				"name": "state",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "acceptTimeRemaining",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deliveryTimeRemaining",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bool",
-				"name": "canAccept",
-				"type": "bool"
-			},
-			{
-				"internalType": "bool",
-				"name": "canCancel",
-				"type": "bool"
-			},
-			{
-				"internalType": "bool",
-				"name": "canRefund",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			}
-		],
-		"name": "getPendingOrdersForDriver",
-		"outputs": [
-			{
-				"internalType": "uint256[]",
-				"name": "",
-				"type": "uint256[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "maxPlatformFeePercentage",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "nextOrderId",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "nonces",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "orders",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "customer",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "driver",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "merchant",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountDriver",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountMerchant",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "platformFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "codeHash",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "creationTime",
-				"type": "uint256"
-			},
-			{
-				"internalType": "enum DeliveryEscrow.State",
-				"name": "state",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint8",
-				"name": "attempts",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "nonce",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "pendingWithdrawals",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "platform",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "refundAfterDeadline",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			}
-		],
-		"name": "rejectOrder",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newFeeManager",
-				"type": "address"
-			}
-		],
-		"name": "setFeeManager",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "newPercentage",
-				"type": "uint256"
-			}
-		],
-		"name": "setMaxPlatformFeePercentage",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawAccidentalFunds",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	},
+
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_platform",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_feeManager",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AcceptWindowPassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DeadlineNotReached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DeadlinePassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExcessivePlatformFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExcessiveSlippage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidAmounts",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCodeLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidState",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TimeOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongCode",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongValue",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "AccidentalDepositReceived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldManager",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newManager",
+        "type": "address"
+      }
+    ],
+    "name": "FeeManagerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      }
+    ],
+    "name": "OrderAccepted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "canceler",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "refundAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "OrderCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "customer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountDriver",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountMerchant",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "OrderCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      }
+    ],
+    "name": "OrderDelivered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "customer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "OrderRefunded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "attemptsLeft",
+        "type": "uint8"
+      }
+    ],
+    "name": "PINAttemptFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldPercentage",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newPercentage",
+        "type": "uint256"
+      }
+    ],
+    "name": "PlatformFeeUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "WithdrawalMade",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DOMAIN_SEPARATOR",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DOMAIN_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DRIVER_ACCEPT_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ORDER_APPROVAL_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "acceptOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "canDriverAccept",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "name": "computeCodeHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "name": "confirmDelivery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_driver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amountDriver",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amountMerchant",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_platformFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_codeHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_driverSignature",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_merchantSignature",
+        "type": "bytes"
+      }
+    ],
+    "name": "createOrder",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "feeManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAcceptTimeRemaining",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      }
+    ],
+    "name": "getDriverOrders",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "driverOrders",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOrderStatus",
+    "outputs": [
+      {
+        "internalType": "enum DeliveryEscrow.State",
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "acceptTimeRemaining",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deliveryTimeRemaining",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "canAccept",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canCancel",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canRefund",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      }
+    ],
+    "name": "getPendingOrdersForDriver",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxPlatformFeePercentage",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextOrderId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "nonces",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "orders",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "customer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "driver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountDriver",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountMerchant",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "platformFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "codeHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum DeliveryEscrow.State",
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "attempts",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nonce",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pendingWithdrawals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "platform",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "refundAfterDeadline",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "rejectOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newFeeManager",
+        "type": "address"
+      }
+    ],
+    "name": "setFeeManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newPercentage",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMaxPlatformFeePercentage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawAccidentalFunds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  },
   "function acceptOrder(uint256 orderId) external",
   "function confirmDelivery(uint256 orderId, string calldata code) external",
-  "function rejectOrder(uint256 orderId) external", 
+  "function rejectOrder(uint256 orderId) external",
   "function withdraw() external",
   "function orders(uint256) external view returns (tuple)",
   "function canDriverAccept(uint256 orderId) external view returns (bool)",
@@ -927,18 +938,35 @@ const CONTRACT_ABI = [
   "function pendingWithdrawals(address) external view returns (uint256)",
   // Events
   "event OrderAccepted(uint256 indexed orderId, address indexed driver)",
-  "event OrderDelivered(uint256 indexed orderId, address indexed driver)", 
+  "event OrderDelivered(uint256 indexed orderId, address indexed driver)",
   "event OrderCanceled(uint256 indexed orderId, address indexed canceler, uint256 refundAmount)"
 ];
+
+
 
 const DeliveryApp = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const bottomSheetHeight = useRef(new Animated.Value(BOTTOM_SHEET_MIN_HEIGHT)).current;
   const lastGesture = useRef(0);
 
+  //contrato
+  const clientId = process.env.EXPO_PUBLIC_THIRDWEB_CLIENT_ID;
+  const secretKey = process.env.EXPO_PRIVATE_THIRDWEB_CLIENT_ID;
+  const THIRDWEB_CLIENT = createThirdwebClient({
+    clientId,
+    secretKey,
+  });
+
+  const contrato = getContract({
+    address: CONTRACT_ADDRESS,
+    chain: arbitrumSepolia,
+    client: THIRDWEB_CLIENT,
+    abi: CONTRACT_ABI
+  });
+
+
   // Blockchain State
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
+  const account = useActiveAccount();
   const [pendingWithdrawals, setPendingWithdrawals] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
   const [contract, setContract] = useState(null);
@@ -1005,38 +1033,6 @@ const DeliveryApp = () => {
     })();
   }, []);
 
-  // Initialize Web3 connection
-  const connectWallet = async () => {
-    try {
-      setIsLoading(true);
-      // Implementation depends on your Web3 provider
-      // For React Native, you might use WalletConnect, MetaMask Mobile SDK, etc.
-      
-      // Example with ethers.js (pseudo-code):
-      // const provider = new ethers.providers.Web3Provider(window.ethereum);
-      // const signer = provider.getSigner();
-      // const address = await signer.getAddress();
-      // const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      
-      // Mock connection for demo
-      const mockAddress = "0x742d35Cc6654C55532CB8a2e7b9F1E4de2Bb0456";
-      setWalletAddress(mockAddress);
-      setWalletConnected(true);
-      
-      // Mock contract instance
-      // setContract(contractInstance);
-      
-      // Fetch pending withdrawals
-      await updatePendingWithdrawals(mockAddress);
-      
-      Alert.alert("Success", "Wallet connected successfully!");
-    } catch (error) {
-      Alert.alert("Error", `Failed to connect wallet: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const updatePendingWithdrawals = async (address) => {
     try {
       // Mock pending withdrawals - replace with actual contract call
@@ -1050,28 +1046,28 @@ const DeliveryApp = () => {
 
   // Smart Contract Interactions
   const acceptOrder = async (orderId) => {
-    if (!walletConnected) {
+    if (!account) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
 
     try {
       setIsLoading(true);
-      
+
       // Actual contract call:
       // const tx = await contract.acceptOrder(orderId);
       // await tx.wait();
-      
+
       // Mock transaction for demo
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Update local state
-      setOrders(prev => prev.map(order => 
-        order.orderId === orderId 
+      setOrders(prev => prev.map(order =>
+        order.orderId === orderId
           ? { ...order, status: 'Accepted', canAccept: false }
           : order
       ));
-      
+
       Alert.alert("Success", "Order accepted successfully!");
     } catch (error) {
       Alert.alert("Error", `Failed to accept order: ${error.message}`);
@@ -1081,7 +1077,7 @@ const DeliveryApp = () => {
   };
 
   const rejectOrder = async (orderId) => {
-    if (!walletConnected) {
+    if (!account) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -1091,33 +1087,35 @@ const DeliveryApp = () => {
       "Are you sure you want to reject this order? This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Reject", style: "destructive", onPress: async () => {
-          try {
-            setIsLoading(true);
-            
-            // Actual contract call:
-            // const tx = await contract.rejectOrder(orderId);
-            // await tx.wait();
-            
-            // Mock transaction
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Update local state
-            setOrders(prev => prev.filter(order => order.orderId !== orderId));
-            
-            Alert.alert("Success", "Order rejected successfully!");
-          } catch (error) {
-            Alert.alert("Error", `Failed to reject order: ${error.message}`);
-          } finally {
-            setIsLoading(false);
+        {
+          text: "Reject", style: "destructive", onPress: async () => {
+            try {
+              setIsLoading(true);
+
+              // Actual contract call:
+              // const tx = await contract.rejectOrder(orderId);
+              // await tx.wait();
+
+              // Mock transaction
+              await new Promise(resolve => setTimeout(resolve, 2000));
+
+              // Update local state
+              setOrders(prev => prev.filter(order => order.orderId !== orderId));
+
+              Alert.alert("Success", "Order rejected successfully!");
+            } catch (error) {
+              Alert.alert("Error", `Failed to reject order: ${error.message}`);
+            } finally {
+              setIsLoading(false);
+            }
           }
-        }}
+        }
       ]
     );
   };
 
   const confirmDelivery = async (orderId, code) => {
-    if (!walletConnected) {
+    if (!account) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -1129,28 +1127,28 @@ const DeliveryApp = () => {
 
     try {
       setIsLoading(true);
-      
+
       // Actual contract call:
       // const tx = await contract.confirmDelivery(orderId, code);
       // await tx.wait();
-      
+
       // Mock transaction
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Update local state
-      setOrders(prev => prev.map(order => 
-        order.orderId === orderId 
+      setOrders(prev => prev.map(order =>
+        order.orderId === orderId
           ? { ...order, status: 'Released' }
           : order
       ));
-      
+
       // Update pending withdrawals
-      await updatePendingWithdrawals(walletAddress);
-      
+      await updatePendingWithdrawals(account.address);
+
       setPinModalVisible(false);
       setPinCode('');
       setConfirmingOrderId(null);
-      
+
       Alert.alert("Success", "Delivery confirmed! Funds are now available for withdrawal.");
     } catch (error) {
       Alert.alert("Error", `Failed to confirm delivery: ${error.message}`);
@@ -1160,7 +1158,7 @@ const DeliveryApp = () => {
   };
 
   const withdrawFunds = async () => {
-    if (!walletConnected) {
+    if (!account) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -1172,16 +1170,16 @@ const DeliveryApp = () => {
 
     try {
       setIsLoading(true);
-      
+
       // Actual contract call:
       // const tx = await contract.withdraw();
       // await tx.wait();
-      
+
       // Mock transaction
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       setPendingWithdrawals('0');
-      
+
       Alert.alert("Success", `Successfully withdrew ${pendingWithdrawals} ETH to your wallet!`);
     } catch (error) {
       Alert.alert("Error", `Failed to withdraw funds: ${error.message}`);
@@ -1211,13 +1209,13 @@ const DeliveryApp = () => {
         const currentHeight = bottomSheetHeight._value;
         const midPoint = (BOTTOM_SHEET_MIN_HEIGHT + BOTTOM_SHEET_MAX_HEIGHT) / 2;
         let targetHeight;
-        
+
         if (Math.abs(velocity) > 0.5) {
           targetHeight = velocity < 0 ? BOTTOM_SHEET_MAX_HEIGHT : BOTTOM_SHEET_MIN_HEIGHT;
         } else {
           targetHeight = currentHeight > midPoint ? BOTTOM_SHEET_MAX_HEIGHT : BOTTOM_SHEET_MIN_HEIGHT;
         }
-        
+
         Animated.spring(bottomSheetHeight, {
           toValue: targetHeight,
           useNativeDriver: false,
@@ -1281,7 +1279,7 @@ const DeliveryApp = () => {
             )}
           </View>
         );
-      
+
       case 'Accepted':
         return (
           <View style={styles.actionButtons}>
@@ -1298,7 +1296,7 @@ const DeliveryApp = () => {
             </TouchableOpacity>
           </View>
         );
-      
+
       case 'Released':
         return (
           <View style={styles.completedBadge}>
@@ -1306,7 +1304,7 @@ const DeliveryApp = () => {
             <Text style={styles.completedText}>Delivered</Text>
           </View>
         );
-      
+
       default:
         return null;
     }
@@ -1358,7 +1356,7 @@ const DeliveryApp = () => {
           </View>
         )}
       </TouchableOpacity>
-      
+
       {renderOrderActions(item)}
     </View>
   );
@@ -1366,7 +1364,7 @@ const DeliveryApp = () => {
   const getMapUrl = () => {
     if (!location) return '';
     const { latitude, longitude } = location;
-    const bbox = `${longitude-0.03},${latitude-0.03},${longitude+0.03},${latitude+0.03}`;
+    const bbox = `${longitude - 0.03},${latitude - 0.03},${longitude + 0.03},${latitude + 0.03}`;
     const markersParams = orders
       .map(o => `&marker=${o.latitude},${o.longitude}`)
       .join('');
@@ -1374,12 +1372,12 @@ const DeliveryApp = () => {
   };
 
   // Correcciones y mejoras aplicadas:
-// - Se asegura que los modales funcionen correctamente y no se bloqueen por el estado de carga global.
-// - Se evita que el botón de "Withdraw" bloquee el botón de "Wallet" cuando isLoading es true.
-// - Se mejora la gestión de estados y el cierre de modales.
-// - Se agregan validaciones y manejo de errores más robustos.
-// - Se corrige el FlatList para evitar advertencias de keyExtractor.
-// - Se asegura que los botones y campos de texto estén siempre habilitados/deshabilitados correctamente.
+  // - Se asegura que los modales funcionen correctamente y no se bloqueen por el estado de carga global.
+  // - Se evita que el botón de "Withdraw" bloquee el botón de "Wallet" cuando isLoading es true.
+  // - Se mejora la gestión de estados y el cierre de modales.
+  // - Se agregan validaciones y manejo de errores más robustos.
+  // - Se corrige el FlatList para evitar advertencias de keyExtractor.
+  // - Se asegura que los botones y campos de texto estén siempre habilitados/deshabilitados correctamente.
 
   // --- MODALS ---
   // PIN Confirmation Modal
@@ -1448,11 +1446,11 @@ const DeliveryApp = () => {
       <View style={styles.modalOverlay}>
         <View style={styles.walletModal}>
           <Text style={styles.walletTitle}>Driver Wallet</Text>
-          {walletConnected ? (
+          {account ? (
             <>
               <Text style={styles.walletLabel}>Address:</Text>
               <Text style={styles.walletValue}>
-                {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}
+                {account.address ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}` : ''}
               </Text>
               <Text style={styles.walletLabel}>Pending Withdrawals:</Text>
               <Text style={styles.walletValue}>{pendingWithdrawals} ETH</Text>
@@ -1473,7 +1471,6 @@ const DeliveryApp = () => {
               <Text style={styles.walletSubtitle}>Connect your wallet to start accepting orders</Text>
               <TouchableOpacity
                 style={styles.connectButton}
-                onPress={connectWallet}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -1501,7 +1498,7 @@ const DeliveryApp = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {/* Connection Status Bar */}
-      {!walletConnected && (
+      {!account && (
         <View style={styles.connectionBar}>
           <Icon name="warning" size={16} color="#E74C3C" />
           <Text style={styles.connectionText}>Wallet not connected - Connect to accept orders</Text>
@@ -1531,7 +1528,7 @@ const DeliveryApp = () => {
         <View style={styles.bottomSheetContent}>
           <View style={styles.headerRow}>
             <Text style={styles.sectionTitle}>Your Orders</Text>
-            {walletConnected && (
+            {account && (
               <View style={styles.balanceBadge}>
                 <Text style={styles.balanceText}>{pendingWithdrawals} ETH</Text>
               </View>
@@ -1553,11 +1550,11 @@ const DeliveryApp = () => {
                 <View
                   style={[
                     styles.statusDot,
-                    { backgroundColor: walletConnected ? '#27AE60' : '#E74C3C' },
+                    { backgroundColor: account ? '#27AE60' : '#E74C3C' },
                   ]}
                 />
                 <Text style={styles.connectionStatusText}>
-                  {walletConnected ? 'Connected' : 'Disconnected'}
+                  {account ? 'Connected' : 'Disconnected'}
                 </Text>
               </View>
             </View>
@@ -1573,7 +1570,7 @@ const DeliveryApp = () => {
               <TouchableOpacity
                 style={[styles.web3Button, styles.withdrawButton]}
                 onPress={withdrawFunds}
-                disabled={!walletConnected || pendingWithdrawals === '0' || isLoading}
+                disabled={!account || pendingWithdrawals === '0' || isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#fff" />
