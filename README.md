@@ -10,8 +10,10 @@ El sistema cuenta con un contrato desplegado en la blockchain para garantizar tr
 
 **Dirección del contrato:**  
 `0xe5ce000007c925cb44cb06ad818d3cc77b9d4d05`  
+
 **enlace del contrato:** 
  https://sepolia.arbiscan.io/address/0xe5ce000007c925cb44cb06ad818d3cc77b9d4d05
+ 
  **Ejemplo de Youtube:**
 [![Ejemplo de UrbanFlow](https://img.youtube.com/vi/OGyU7g3wyTA/0.jpg)](https://www.youtube.com/watch?v=OGyU7g3wyTA)
 
