@@ -95,7 +95,7 @@ export default function HomeScreen() {
 		>
 
 			<ThemedView style={styles.titleContainer}>
-				<ThemedText type="title">Inicio de Seccion</ThemedText>
+				<ThemedText type="title">Inicio de Sesión</ThemedText>
 			</ThemedView>
 			<View style={{ gap: 2, margin: 20 }}>
 				<ThemedText type="subtitle" style={{ gap: 2, margin: 5 }}>{`UrbanFlow`}</ThemedText>
